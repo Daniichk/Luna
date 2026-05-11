@@ -3,227 +3,147 @@
 <head>
     <meta charset='utf-8' />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Luna | Intelligence in Flow</title>
+    <title>LUNA | High-Performance Calendar</title>
     
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
-        :root {
-            --primary: #e94560;
-            --secondary: #950740;
-            --bg: #0f3460;
-            --glass: rgba(255, 255, 255, 0.05);
-            --border: rgba(255, 255, 255, 0.1);
+        :root { --primary: #e94560; --bg: #0f3460; --glass: rgba(255, 255, 255, 0.05); }
+        body { 
+            background: #0a0a0a; color: white; font-family: 'Inter', sans-serif; 
+            margin: 0; display: flex; height: 100vh; overflow: hidden;
         }
 
-        body {
-            background-color: #1a1a2e;
-            background-image: radial-gradient(circle at top right, #16213e, #1a1a2e);
-            color: #ffffff;
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            display: flex;
-            min-height: 100vh;
-            overflow: hidden;
-        }
-
-        /* Side Dashboard */
         .sidebar {
-            width: 320px;
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            border-right: 1px solid var(--border);
-            padding: 30px 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            z-index: 1000;
-            overflow-y: auto;
+            width: 300px; background: var(--glass); backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255,255,255,0.1); padding: 30px 20px;
+            display: flex; flex-direction: column; gap: 20px; z-index: 10;
         }
 
-        .logo {
-            font-size: 24px;
-            font-weight: 600;
-            letter-spacing: 4px;
-            background: linear-gradient(to right, #fff, var(--primary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .main { flex-grow: 1; padding: 20px; display: flex; flex-direction: column; }
+        #calendar { background: #1a1a1a; padding: 15px; border-radius: 12px; border: 1px solid #333; height: 100%; }
+
+        .logo { font-size: 24px; font-weight: 600; letter-spacing: 3px; color: var(--primary); }
+        .status-badge { font-size: 10px; background: #222; padding: 5px 10px; border-radius: 20px; border: 1px solid #444; }
+
+        input, button { 
+            width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #333; 
+            background: #222; color: white; font-size: 14px; box-sizing: border-box;
         }
+        button { background: var(--primary); border: none; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        button:hover { opacity: 0.8; transform: translateY(-1px); }
+        .btn-sec { background: #333; margin-top: 5px; }
 
-        .input-group { display: flex; flex-direction: column; gap: 8px; }
-        label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #888; }
-
-        input {
-            background: rgba(255, 255, 255, 0.07);
-            border: 1px solid var(--border);
-            padding: 12px;
-            border-radius: 8px;
-            color: white;
-            outline: none;
-            font-size: 14px;
-        }
-
-        input:focus { border-color: var(--primary); }
-
-        button {
-            padding: 14px;
-            border-radius: 8px;
-            border: none;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .btn-main { background: linear-gradient(45deg, var(--primary), var(--secondary)); }
-        .btn-outline { background: rgba(255,255,255,0.05); border: 1px solid var(--border); margin-top: 5px; }
-
-        button:hover { transform: translateY(-2px); filter: brightness(1.2); }
-
-        /* Calendar Area */
-        .main-content {
-            flex-grow: 1;
-            padding: 30px;
-            overflow-y: auto;
-        }
-
-        #calendar {
-            background: var(--glass);
-            padding: 20px;
-            border-radius: 20px;
-            border: 1px solid var(--border);
-        }
-
-        /* Calendar Styles */
-        .fc-theme-standard td, .fc-theme-standard th { border: 1px solid rgba(255,255,255,0.05) !important; }
-        .luna-event { 
-            background: linear-gradient(45deg, var(--primary), var(--secondary)) !important;
-            border: none !important;
-            box-shadow: 0 4px 10px rgba(233, 69, 96, 0.3);
-        }
-        .google-event {
-            background: #444 !important;
-            border: 1px solid #555 !important;
-        }
+        /* Кастомизация календаря под "про" стиль */
+        .fc-theme-standard td, .fc-theme-standard th { border: 1px solid #222 !important; }
+        .fc-day-today { background: rgba(233, 69, 96, 0.05) !important; } /* Подсветка сегодня */
+        .luna-event { background: var(--primary) !important; border: none !important; font-size: 11px; }
+        .fc-header-toolbar { margin-bottom: 20px !important; }
     </style>
 </head>
 <body>
 
-    <div class="sidebar">
-        <div class="logo">LUNA.AI</div>
-        
-        <div class="input-group">
-            <label>Cycle Start</label>
-            <input type="date" id="periodStart" value="2026-05-10">
-        </div>
-
-        <div class="input-group">
-            <label>Cycle Length (Days)</label>
-            <input type="number" id="cycleLength" value="28">
-        </div>
-
-        <button class="btn-main" onclick="updateLocalCalendar()">Update View</button>
-
-        <hr style="border: 0; border-top: 1px solid var(--border); margin: 10px 0;">
-
-        <div class="input-group">
-            <label>Google iCal URL (Import)</label>
-            <input type="text" id="googleUrl" placeholder="Paste secret iCal link...">
-        </div>
-        <button class="btn-outline" id="syncBtn" onclick="syncFromGoogle()">Sync From Google</button>
-        
-        <button class="btn-outline" onclick="getSyncLink()">Get Export Link</button>
-
-        <div style="margin-top: auto; font-size: 10px; color: #444;">
-            &copy; 2026 LUNA SYSTEMS. CLOUD SYNC READY.
-        </div>
+<div class="sidebar">
+    <div class="logo">LUNA CORE</div>
+    <div class="status-badge" id="currentDayDisplay">Today: Loading...</div>
+    
+    <div style="margin-top: 10px;">
+        <label style="font-size: 10px; color: #666;">LAST CYCLE START</label>
+        <input type="date" id="dateStart" value="2026-05-10">
     </div>
 
-    <div class="main-content">
-        <div id='calendar'></div>
+    <button onclick="updateLuna()">Calculate Cycles</button>
+
+    <hr style="border: 0; border-top: 1px solid #333; margin: 20px 0;">
+
+    <div>
+        <label style="font-size: 10px; color: #666;">GOOGLE CALENDAR LINK</label>
+        <input type="text" id="gUrl" placeholder="Paste iCal URL...">
     </div>
+    <button class="btn-sec" id="gBtn" onclick="importGoogle()">Sync Google Tasks</button>
+    <button class="btn-sec" onclick="copyExport()">Export to Google</button>
+</div>
 
-    <script>
-        var calendar;
+<div class="main">
+    <div id='calendar'></div>
+</div>
 
-        document.addEventListener('DOMContentLoaded', function() {
-            var calendarEl = document.getElementById('calendar');
-            calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
-                events: [],
-                height: '85vh'
-            });
-            calendar.render();
-            updateLocalCalendar();
+<script>
+    let calendar;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Выводим текущую дату в сайдбар
+        const now = new Date();
+        document.getElementById('currentDayDisplay').innerText = "Today: " + now.toDateString();
+
+        const calendarEl = document.getElementById('calendar');
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek' // Переключатель месяц/неделя
+            },
+            firstDay: 1,
+            nowIndicator: true, // Красная линия на текущем времени в режиме недели
+            events: [],
+            locale: 'en'
         });
+        calendar.render();
+        updateLuna();
+    });
 
-        // 1. Обновление локального календаря (твои циклы)
-        function updateLocalCalendar() {
-            var start = document.getElementById('periodStart').value;
-            var cycle = parseInt(document.getElementById('cycleLength').value);
-            if (!start) return;
+    function updateLuna() {
+        const start = document.getElementById('dateStart').value;
+        if (!start) return;
+        
+        const events = [];
+        let base = new Date(start);
+        for (let i = 0; i < 12; i++) {
+            let d = new Date(base);
+            d.setDate(base.getDate() + (i * 28));
+            let end = new Date(d);
+            end.setDate(d.getDate() + 5);
 
-            var eventsList = [];
-            var baseDate = new Date(start);
+            events.push({
+                title: '🌙 Luna: Low Energy',
+                start: d.toISOString().split('T')[0],
+                end: end.toISOString().split('T')[0],
+                className: 'luna-event'
+            });
+        }
+        const oldSrc = calendar.getEventSourceById('luna');
+        if (oldSrc) oldSrc.remove();
+        calendar.addEventSource({ id: 'luna', events: events });
+    }
 
-            for (var i = 0; i < 12; i++) {
-                var eventStart = new Date(baseDate);
-                eventStart.setDate(baseDate.getDate() + (i * cycle));
-                var eventEnd = new Date(eventStart);
-                eventEnd.setDate(eventStart.getDate() + 5);
+    async function importGoogle() {
+        const url = document.getElementById('gUrl').value;
+        if (!url) return alert("Paste link first");
+        
+        const btn = document.getElementById('gBtn');
+        btn.innerText = "Syncing...";
 
-                eventsList.push({
-                    title: '🌙 Luna Cycle',
-                    start: eventStart.toISOString().split('T')[0],
-                    end: eventEnd.toISOString().split('T')[0],
-                    className: 'luna-event'
-                });
+        try {
+            const res = await fetch(`/fetch_google_events?url=${encodeURIComponent(url)}`);
+            const data = await res.json();
+            if (data.events) {
+                const old = calendar.getEventSourceById('google');
+                if (old) old.remove();
+                calendar.addEventSource({ id: 'google', events: data.events });
+                alert("Imported " + data.events.length + " events!");
             }
+        } catch (e) { alert("Error: " + e); }
+        btn.innerText = "Sync Google Tasks";
+    }
 
-            // Удаляем старые циклы и добавляем новые
-            var sources = calendar.getEventSources();
-            sources.forEach(src => { if(src.internalEventSource.ui.classNames.includes('luna-event')) src.remove(); });
-            calendar.addEventSource({ events: eventsList, className: 'luna-event' });
-        }
+    function copyExport() {
+        const start = document.getElementById('dateStart').value;
+        const link = window.location.origin + `/generate_ics?start=${start}&cycle=28`;
+        prompt("Copy this to Google Calendar (Add by URL):", link);
+    }
+</script>
 
-        // 2. Импорт ИЗ Google
-        async function syncFromGoogle() {
-            const url = document.getElementById('googleUrl').value;
-            if (!url) return alert("Please paste Google iCal URL");
-
-            const btn = document.getElementById('syncBtn');
-            btn.innerText = "Connecting...";
-
-            try {
-                const response = await fetch(`/fetch_google_events?url=${encodeURIComponent(url)}`);
-                const data = await response.json();
-
-                if (data.events) {
-                    calendar.addEventSource({
-                        events: data.events,
-                        className: 'google-event'
-                    });
-                    alert("Google Calendar Connected!");
-                } else {
-                    alert("Error: " + data.error);
-                }
-            } catch (e) {
-                alert("Failed to fetch: " + e);
-            } finally {
-                btn.innerText = "Sync From Google";
-            }
-        }
-
-        // 3. Экспорт В Google
-        function getSyncLink() {
-            const start = document.getElementById('periodStart').value;
-            const cycle = document.getElementById('cycleLength').value;
-            const link = window.location.origin + `/generate_ics?start=${start}&cycle=${cycle}`;
-            
-            prompt("Copy this URL to add LUNA to Google Calendar:", link);
-        }
-    </script>
 </body>
 </html>
