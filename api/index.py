@@ -2,84 +2,57 @@ import os
 import io
 import requests
 from flask import Flask, render_template, request, send_file, jsonify
+from flask_cors import CORS
 from ics import Calendar, Event
 from datetime import datetime, timedelta
 
-# Настройка путей для Vercel
 app = Flask(__name__, template_folder='../templates')
+CORS(app)
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# ЭНДПОИНТ 1: Генерация твоих циклов Luna (для скачивания или подписки)
-@app.route('/generate_ics')
-def generate_ics():
-    try:
-        # Получаем данные из параметров URL (query params)
-        start_date_str = request.args.get('start')
-        cycle_length = int(request.args.get('cycle', 28))
-        
-        if not start_date_str:
-            return "Error: Start date required", 400
-            
-        start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
-        c = Calendar()
-
-        # Генерируем на 12 месяцев для солидности
-        for i in range(12):
-            period_start = start_date + timedelta(days=i * cycle_length)
-            e = Event()
-            e.name = "🌙 Luna Cycle (Low Energy)"
-            e.begin = period_start
-            e.duration = timedelta(days=5)
-            e.description = "Biorhythm Sync: Focus on recovery. Do hard things, but smart."
-            c.events.add(e)
-
-        f = io.BytesIO()
-        f.write(str(c).encode('utf-8'))
-        f.seek(0)
-
-        return send_file(
-            f, 
-            mimetype='text/calendar',
-            as_attachment=True,
-            download_name='luna_sync.ics'
-        )
-    except Exception as e:
-        return f"Error: {str(e)}", 500
-
-# ЭНДПОИНТ 2: Чтение данных ИЗ Google Календаря мамы
 @app.route('/fetch_google_events')
 def fetch_google_events():
     ical_url = request.args.get('url')
     if not ical_url:
         return jsonify({"events": []})
-    
     try:
-        # Идем в Google по секретной ссылке мамы
-        response = requests.get(ical_url, timeout=10)
+        headers = {'User-Agent': 'Mozilla/5.0 LunaApp/1.0'}
+        response = requests.get(ical_url, headers=headers, timeout=10)
         if response.status_code != 200:
-            return jsonify({"error": "Could not fetch Google Calendar"}), 400
+            return jsonify({"error": "Failed to fetch Google Calendar"}), 400
             
         g_calendar = Calendar(response.text)
-        
         google_events = []
         for event in g_calendar.events:
-            # Превращаем события из формата ICS в формат для нашего FullCalendar
             google_events.append({
-                'title': event.name,
+                'title': event.name or "Event",
                 'start': event.begin.isoformat(),
                 'end': event.end.isoformat() if event.end else event.begin.isoformat(),
-                'backgroundColor': '#333333', # Темный цвет для обычных дел
-                'borderColor': '#444444',
+                'backgroundColor': '#3d3d3d',
+                'borderColor': '#555',
                 'allDay': event.all_day
             })
-            
         return jsonify({"events": google_events})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Для локальной отладки (Vercel это игнорирует)
-if __name__ == '__main__':
-    app.run(debug=True)
+@app.route('/generate_ics')
+def generate_ics():
+    start_str = request.args.get('start')
+    cycle = int(request.args.get('cycle', 28))
+    if not start_str: return "Error", 400
+    
+    start_date = datetime.strptime(start_str, '%Y-%m-%d')
+    c = Calendar()
+    for i in range(12):
+        p_start = start_date + timedelta(days=i * cycle)
+        e = Event(name="🌙 Luna Cycle", begin=p_start, duration=timedelta(days=5))
+        c.events.add(e)
+    
+    f = io.BytesIO()
+    f.write(str(c).encode('utf-8'))
+    f.seek(0)
+    return send_file(f, mimetype='text/calendar', as_attachment=True, download_name='luna.ics')
